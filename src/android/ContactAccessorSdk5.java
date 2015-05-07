@@ -1437,7 +1437,7 @@ public class ContactAccessorSdk5 extends ContactAccessor {
 
         // if the save was a success return the contact ID
         if (retVal) {
-            return id;
+            return rawId;
         } else {
             return null;
         }
