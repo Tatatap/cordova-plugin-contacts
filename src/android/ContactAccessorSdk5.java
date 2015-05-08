@@ -1295,12 +1295,34 @@ public class ContactAccessorSdk5 extends ContactAccessor {
 
         // Modify note
         String note = getJsonString(contact, "note");
-        ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
-                .withSelection(ContactsContract.Data.CONTACT_ID + "=? AND " +
-                        ContactsContract.Data.MIMETYPE + "=?",
-                        new String[] { id, ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE })
-                .withValue(ContactsContract.CommonDataKinds.Note.NOTE, note)
-                .build());
+        if (note != null) {
+            JSONObject oldContact = null;
+
+            try {
+                oldContact = getContactById("" + rawId, new JSONArray().put("note"));
+            } catch (JSONException e) {
+                Log.d(LOG_TAG, "Could not retrieve contact on note modify");
+            }
+
+            if (oldContact == null) {
+                Log.d(LOG_TAG, "Could not retrieve contact on note modify");
+            }
+            else if (!oldContact.has("note")) {
+                ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                        .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawId)
+                        .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE)
+                        .withValue(ContactsContract.CommonDataKinds.Note.NOTE, note)
+                        .build());
+            }
+            else {
+                ops.add(ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                        .withSelection(ContactsContract.Data.CONTACT_ID + "=? AND " +
+                                ContactsContract.Data.MIMETYPE + "=?",
+                                new String[] { id, ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE })
+                        .withValue(ContactsContract.CommonDataKinds.Note.NOTE, note)
+                        .build());
+            }
+        }
 
         // Modify nickname
         String nickname = getJsonString(contact, "nickname");
